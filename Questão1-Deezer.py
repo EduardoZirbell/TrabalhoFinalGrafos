@@ -141,7 +141,7 @@ match option.lower():
         # Desenha todas as arestas em cinza claro
         nx.draw_networkx_edges(G, pos, edge_color="lightgray")
 
-        # Desenha as arestas com grandes chances de serem pontes em vermelho
+        # Desenha as arestas com grandes chances de serem pontes
         nx.draw_networkx_edges(
             G,
             pos,
