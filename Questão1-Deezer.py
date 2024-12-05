@@ -3,9 +3,9 @@ import networkx as nx
 import pandas as pd
 from collections import Counter
 
-# Carregar os dados (limitando a quantidade de linhas)
+# Carrega os dados (limitando a quantidade de linhas)
 # edges_df = pd.read_csv("data/deezer/edges.csv", nrows=50)
-# Carregar os dados (sem limitar a quantidade de linhas)
+# Carrega os dados (sem limitar a quantidade de linhas)
 edges_df = pd.read_csv("data/deezer/edges.csv")
 # Define que as colunas 1 e 2 serão source e target para uso do dataframe na proxíma função
 edges_df.columns = ["source", "target"]
@@ -43,13 +43,12 @@ match option.lower():
     case "b":
         graus = [G.degree(n) for n in G.nodes()]
 
-        # Calcular o grau médio
+        # Calcula o grau médio
         grau_medio = sum(graus) / len(graus)
 
-        # Calcular a distribuição do grau (quantidade de nós com cada grau)
+        # Calcula a distribuição do grau (quantidade de nós com cada grau)
         grau_contagem = Counter(graus)
-
-        # Plotar a distribuição do grau dos vértices
+        
         plt.figure(figsize=(12, 6))
         plt.bar(
             grau_contagem.keys(),
@@ -130,19 +129,19 @@ match option.lower():
         for edge, centrality in bridge_edges:
             print(f"{edge}: {centrality:.4f}")
 
-        # Identificar os nós conectados às arestas com maiores chances de serem pontes
+        # Identifica os nós conectados às arestas com maiores chances de serem pontes
         bridge_nodes = set()
         for edge, _ in bridge_edges:
             bridge_nodes.update(edge)
 
-        # Desenhar o grafo destacando as arestas com grandes chances de serem pontes
+        # Desenha a base do grafo
         pos = nx.spring_layout(G)
         plt.figure(figsize=(12, 6))
 
-        # Desenhar todas as arestas em cinza claro
+        # Desenha todas as arestas em cinza claro
         nx.draw_networkx_edges(G, pos, edge_color="lightgray")
 
-        # Desenhar as arestas com grandes chances de serem pontes em vermelho
+        # Desenha as arestas com grandes chances de serem pontes em vermelho
         nx.draw_networkx_edges(
             G,
             pos,
@@ -151,19 +150,18 @@ match option.lower():
             width=2,
         )
 
-        # Desenhar os nós não conectados às arestas com grandes chances de serem pontes em azul
+        # Desenha os nós não conectados às arestas com grandes chances de serem pontes
         non_bridge_nodes = set(G.nodes()) - bridge_nodes
         nx.draw_networkx_nodes(
             G, pos, nodelist=list(non_bridge_nodes), node_size=5, node_color="black"
         )
 
-        # Desenhar os nós conectados às arestas com grandes chances de serem pontes em verde
+        # Desenha os nós conectados às arestas com grandes chances de serem pontes
         nx.draw_networkx_nodes(
             G, pos, nodelist=list(bridge_nodes), node_size=5, node_color="blue"
         )
 
         plt.title("Grafo com Arestas com Grandes Chances de Serem Pontes Destacadas")
         plt.show()
-
     case _:
         print("Opção inválida")
