@@ -2,24 +2,24 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 from collections import Counter
-import random
 
 # Carregar os dados (limitando a quantidade de linhas)
-# edges_df = pd.read_csv("data/facebook/edges.csv", nrows=50)
+# edges_df = pd.read_csv("data/deezer/edges.csv", nrows=50)
 # Carregar os dados (sem limitar a quantidade de linhas)
-edges_df = pd.read_csv("data/lastfm/edges.csv")
+edges_df = pd.read_csv("data/deezer/edges.csv")
 # Define que as colunas 1 e 2 serão source e target para uso do dataframe na proxíma função
 edges_df.columns = ["source", "target"]
 
 # Captura os dados do Edges_DF e converte em um grafo com as conexões entre os nós e arestas
-# G = nx.from_pandas_edgelist(edges_df, "source", "target")
+G = nx.from_pandas_edgelist(edges_df, "source", "target")
 
-G1 = nx.Graph([(1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9)])
-G1.add_node('A')
-G2 = nx.complete_graph(10)
-G2 = nx.relabel_nodes(G2, {i: i + 10 for i in G2.nodes()})
+# Grafo de Teste
+# G1 = nx.Graph([(1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9)])
+# G1.add_node("A")
+# G2 = nx.complete_graph(9)
+# G2 = nx.relabel_nodes(G2, {i: i + 10 for i in G2.nodes()})
 
-G = nx.compose_all([G1, G2])
+# G = nx.compose_all([G1, G2])
 
 option = input(
     """Bem vindo ao trabalho final de grafos. 
@@ -33,8 +33,11 @@ Escolha a opção desejada: """
 )
 match option.lower():
     case "a":
-        nx.draw_circular(
-            G, with_labels=False, node_size=5, font_size=3, edge_color="blue"
+        nx.draw(
+            G,
+            node_size=5,
+            edge_color="blue",
+            node_color="red",
         )
         plt.show()
     case "b":
@@ -60,100 +63,107 @@ match option.lower():
         plt.grid(True)
         plt.show()
     case "c":
-        # Calcular o número de componentes conexos
+        # Calcula o número de componentes conexos
         num_componentes = nx.number_connected_components(G)
 
-        # Exibir o número de componentes conexos
         print(f"Número de componentes conexos: {num_componentes}")
     case "d":
-        # Identificar os componentes conectados
+        # Identifica os componentes conectados
         components = list(nx.connected_components(G))
+        # Calcula o tamanho de cada componente
         component_sizes = [len(component) for component in components]
 
-        # Verificar se há mais de um componente
+        # Verifica se há mais de um componente
         if len(component_sizes) > 1:
-            plt.figure(figsize=(8, 6))
+            plt.figure(figsize=(12, 6))
             plt.hist(
                 component_sizes,
-                bins=range(1, max(component_sizes) + 2),
                 edgecolor="black",
                 align="left",
             )
             plt.title("Distribuição do Tamanho dos Componentes do Grafo")
             plt.xlabel("Tamanho dos Componentes")
             plt.ylabel("Frequência")
-            plt.grid(axis="y", linestyle="--", alpha=0.7)
+            plt.grid(True)
             plt.show()
         else:
             print("O grafo possui apenas um componente.")
     case "e":
-        # Verificar se o grafo é conexo, necessário para calcular distâncias
         if nx.is_connected(G):
-            # Calcular a distância média (caminho médio)
-            avg_distance = nx.average_shortest_path_length(G)
-            print(f"Distância média entre todos os vértices: {avg_distance:.4f}")
-            
-            # Calcular todas as distâncias de pares de vértices
+            shortest_path_lengths = dict(nx.all_pairs_shortest_path_length(G))
+
+            # Coleta todas as distâncias
             distances = []
-            for source, path_lengths in nx.shortest_path_length(G):
-                distances.extend(path_lengths.values())
-            
-            # Criar um histograma da distribuição das distâncias
-            plt.figure(figsize=(8, 6))
-            plt.hist(distances, bins=range(1, max(distances) + 2), edgecolor="black", align="left")
-            plt.title("Distribuição das Distâncias entre os Vértices")
+            for source, target_distances in shortest_path_lengths.items():
+                distances.extend(target_distances.values())
+
+            frequency = Counter(distances)
+
+            distances = list(frequency.keys())
+            frequencies = list(frequency.values())
+
+            # Remove a distância 0 (distância de um nó para ele mesmo)
+            distances = [d for d in distances if d > 0]
+
+            # Calcula a distância média
+            average_distance = sum(distances) / len(distances)
+            print(f"Distância média entre os vértices: {average_distance:.2f}")
+
+            plt.bar(distances, frequencies, color="skyblue", edgecolor="black")
+            plt.title("Frequência das Distâncias no Grafo Completo (n=9)")
             plt.xlabel("Distância")
             plt.ylabel("Frequência")
-            plt.grid(axis='y', linestyle='--', alpha=0.7)
+            plt.xticks(distances)
+            plt.grid(True)
             plt.show()
         else:
-            print("O grafo não é conexo. Calcule a distância média apenas para os componentes conectados.")
+            print("O grafo não é conexo, não é possível calcular a distância média.")
     case "f":
         # Calcula a centralidade de carga das arestas
         edge_centrality = nx.edge_betweenness_centrality(G)
 
-        # Ordena as arestas por centralidade de carga em ordem decrescente
-        sorted_edges = sorted(edge_centrality.items(), key=lambda x: x[1], reverse=True)
-
-        # Retorna as arestas com maiores chances de serem pontes
-        bridge_edges = sorted_edges[:100]
+        # Ordena as arestas por centralidade de carga em ordem decrescente (key=lambda x: -x[1] ordena os itens do dicionário edge_centrality com base nos valores, do maior para o menor.)
+        bridge_edges = sorted(edge_centrality.items(), key=lambda x: -x[1])
 
         # Imprime as arestas com maiores chances de serem pontes
         print("Arestas com grandes chances de serem pontes:")
         for edge, centrality in bridge_edges:
             print(f"{edge}: {centrality:.4f}")
-        
+
         # Identificar os nós conectados às arestas com maiores chances de serem pontes
-            bridge_nodes = set()
-            for edge, _ in bridge_edges:
-                bridge_nodes.update(edge)
+        bridge_nodes = set()
+        for edge, _ in bridge_edges:
+            bridge_nodes.update(edge)
 
         # Desenhar o grafo destacando as arestas com grandes chances de serem pontes
-        pos = nx.spring_layout(G)  # Layout para a visualização do grafo
-        plt.figure(figsize=(12, 8))
+        pos = nx.spring_layout(G)
+        plt.figure(figsize=(12, 6))
 
         # Desenhar todas as arestas em cinza claro
         nx.draw_networkx_edges(G, pos, edge_color="lightgray")
 
         # Desenhar as arestas com grandes chances de serem pontes em vermelho
-        nx.draw_networkx_edges(G, pos, edgelist=[edge for edge, _ in bridge_edges], edge_color="red", width=2)
+        nx.draw_networkx_edges(
+            G,
+            pos,
+            edgelist=[edge for edge, _ in bridge_edges],
+            edge_color="red",
+            width=2,
+        )
 
         # Desenhar os nós não conectados às arestas com grandes chances de serem pontes em azul
         non_bridge_nodes = set(G.nodes()) - bridge_nodes
-        nx.draw_networkx_nodes(G, pos, nodelist=list(non_bridge_nodes), node_size=50, node_color="blue")
+        nx.draw_networkx_nodes(
+            G, pos, nodelist=list(non_bridge_nodes), node_size=5, node_color="black"
+        )
 
         # Desenhar os nós conectados às arestas com grandes chances de serem pontes em verde
-        nx.draw_networkx_nodes(G, pos, nodelist=list(bridge_nodes), node_size=50, node_color="green")
-
-        # Desenhar os rótulos dos nós
-        nx.draw_networkx_labels(G, pos, font_size=8, font_color="black")
-
-        # Adicionar rótulos às arestas com os valores de centralidade
-        edge_labels = {edge: f"{centrality:.4f}" for edge, centrality in bridge_edges}
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color="red")
+        nx.draw_networkx_nodes(
+            G, pos, nodelist=list(bridge_nodes), node_size=5, node_color="blue"
+        )
 
         plt.title("Grafo com Arestas com Grandes Chances de Serem Pontes Destacadas")
         plt.show()
-        
+
     case _:
         print("Opção inválida")
